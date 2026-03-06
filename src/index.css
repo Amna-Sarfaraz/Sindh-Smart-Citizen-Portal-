@@ -220,9 +220,6 @@ th {
   color: var(--secondary);
   font-size: 0.9rem;
   margin-top: auto;
-<<<<<<< HEAD
-}
-=======
 }
 /* login/register */
 button {
@@ -573,4 +570,3 @@ button {
     display: none;
   }
 }
->>>>>>> 0f4ddfd (Complain Page UI Updated)

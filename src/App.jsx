@@ -13,19 +13,17 @@ function App() {
 
   return (
     <div className="app-container">
-      {!isComplaintRoute && (
-        <nav className="main-nav">
-          <div className="logo"><Link to="/">SSCP</Link></div>
-          <ul className="nav-links">
-            <li><Link to="/">Home</Link></li>
-            <li><Link to="/property">Properties</Link></li>
-            <li><Link to="/complaint">Complaints</Link></li>
-            <li><Link to="/dashboard">Dashboard</Link></li>
-            <li><Link to="/login" className="btn-login">Login</Link></li>
-            <li><Link to="/register" className="btn-register">Register</Link></li>
-          </ul>
-        </nav>
-      )}
+      <nav className="main-nav">
+        <div className="logo"><Link to="/">SSCP</Link></div>
+        <ul className="nav-links">
+          <li><Link to="/">Home</Link></li>
+          <li><Link to="/property">Properties</Link></li>
+          <li><Link to="/complaint">Complaints</Link></li>
+          <li><Link to="/dashboard">Dashboard</Link></li>
+          <li><Link to="/login" className="btn-login">Login</Link></li>
+          <li><Link to="/register" className="btn-register">Register</Link></li>
+        </ul>
+      </nav>
 
       <main className={isComplaintRoute ? 'content content-complaint' : 'content'}>
         <Routes>
