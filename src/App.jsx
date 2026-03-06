@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -8,21 +8,26 @@ import Complaint from './pages/Complaint';
 import Dashboard from './pages/Dashboard';
 
 function App() {
+  const location = useLocation();
+  const isComplaintRoute = location.pathname === '/complaint';
+
   return (
     <div className="app-container">
-      <nav className="main-nav">
-        <div className="logo"><Link to="/">SSCP</Link></div>
-        <ul className="nav-links">
-          <li><Link to="/">Home</Link></li>
-          <li><Link to="/property">Properties</Link></li>
-          <li><Link to="/complaint">Complaints</Link></li>
-          <li><Link to="/dashboard">Dashboard</Link></li>
-          <li><Link to="/login" className="btn-login">Login</Link></li>
-          <li><Link to="/register" className="btn-register">Register</Link></li>
-        </ul>
-      </nav>
+      {!isComplaintRoute && (
+        <nav className="main-nav">
+          <div className="logo"><Link to="/">SSCP</Link></div>
+          <ul className="nav-links">
+            <li><Link to="/">Home</Link></li>
+            <li><Link to="/property">Properties</Link></li>
+            <li><Link to="/complaint">Complaints</Link></li>
+            <li><Link to="/dashboard">Dashboard</Link></li>
+            <li><Link to="/login" className="btn-login">Login</Link></li>
+            <li><Link to="/register" className="btn-register">Register</Link></li>
+          </ul>
+        </nav>
+      )}
 
-      <main className="content">
+      <main className={isComplaintRoute ? 'content content-complaint' : 'content'}>
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
@@ -33,9 +38,11 @@ function App() {
         </Routes>
       </main>
 
-      <footer className="main-footer">
-        <p>&copy; 2026 Smart City Service Complaint Portal. All rights reserved.</p>
-      </footer>
+      {!isComplaintRoute && (
+        <footer className="main-footer">
+          <p>&copy; 2026 Smart City Service Complaint Portal. All rights reserved.</p>
+        </footer>
+      )}
     </div>
   );
 }
