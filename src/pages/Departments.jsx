@@ -3,6 +3,7 @@ import { mockData } from '../mockData';
 import Card from '../components/ui/Card';
 import bgImg from "../assets/bg.png";
 import { Zap, Droplets, Flame } from "lucide-react";
+import DashboardLayout from "../Pages/DashboardLayout";
 
 const departments = [
   {
@@ -31,6 +32,7 @@ const departments = [
 
 const Departments = () => {
   return (
+    <DashboardLayout>
     <div className="min-h-screen bg-surface-50  "
 >
 
@@ -38,7 +40,7 @@ const Departments = () => {
       <header className="bg-gradient-to-br from-auth-start to-auth-end p-10 text-white shadow-lg">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
-            Departments Management
+            Departments
           </h1>
         </div>
       </header>
@@ -46,9 +48,11 @@ const Departments = () => {
       {/* Department Cards */}
       <main className="container mx-auto px-4 py-12" style={{ backgroundImage: `url(${bgImg})` }}>
 
-        <h2 className="mb-8 text-center text-3xl font-semibold text-surface-800" >
-          Departments
-        </h2>
+        <p className="mb-8 mx-auto max-w-4xl text-lg text-surface-600 italic">
+  "These departments are responsible for managing key city utilities such as electricity, 
+  gas, and water supply. Citizens can submit service-related complaints through the 
+  Smart City Complaint Portal".
+</p>
 
         <div className="mx-auto grid max-w-4xl gap-6 sm:grid-cols-3">
 
@@ -90,6 +94,7 @@ const Departments = () => {
       </main>
 
     </div>
+    </DashboardLayout>
   );
 };
 

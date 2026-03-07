@@ -17,8 +17,9 @@ function App() {
   const isLandingRoute = location.pathname === '/';
   const isProfileRoute = location.pathname === '/profile';
   const isDashboardRoute = location.pathname === '/dashboard';
+  const isDepartmentsRoute = location.pathname === '/departments';
 
-  const isFullPage = isLandingRoute || isComplaintRoute || isProfileRoute || isDashboardRoute;
+  const isFullPage = isLandingRoute || isDepartmentsRoute || isComplaintRoute || isProfileRoute || isDashboardRoute;
 
   return (
     <div className="min-h-screen bg-surface-50 text-surface-800">
@@ -31,7 +32,7 @@ function App() {
             </div>
             <ul className="flex list-none items-center gap-6 p-0 text-sm font-medium">
               <li><Link to="/" className={navLinkClass}>Home</Link></li>
-              <li><Link to="/Departments" className={navLinkClass}>Departments</Link></li>
+              <li><Link to="/departments" className={navLinkClass}>Departments</Link></li>
               <li><Link to="/complaint" className={navLinkClass}>Complaints</Link></li>
               <li><Link to="/dashboard" className={navLinkClass}>Dashboard</Link></li>
               <li><Link to="/profile" className={navLinkClass}>Profile</Link></li>
@@ -46,7 +47,7 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/Departments" element={<Property />} />
+            <Route path="/departments" element={<Property />} />
             <Route path="/complaint" element={<Complaint />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<ProfilePage />} />
