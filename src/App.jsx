@@ -14,11 +14,17 @@ function App() {
   const location = useLocation();
   const isComplaintRoute = location.pathname === '/complaint';
   const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
+  const isLandingRoute = location.pathname === '/';
+  const isProfileRoute = location.pathname === '/profile';
+  const isDashboardRoute = location.pathname === '/dashboard';
+
+  const isFullPage = isLandingRoute || isComplaintRoute || isProfileRoute || isDashboardRoute;
 
   return (
     <div className="min-h-screen bg-surface-50 text-surface-800">
       <div className="flex min-h-screen flex-col">
-        {!isAuthRoute && (
+
+        {!isAuthRoute && !isFullPage && (
           <nav className="sticky top-0 z-50 flex items-center justify-between bg-white px-[5%] py-4 shadow-sm">
             <div className="text-lg font-bold text-surface-900">
               <Link to="/">SSCP</Link>
@@ -35,7 +41,7 @@ function App() {
           </nav>
         )}
 
-        <main className={isComplaintRoute ? 'flex-1' : 'mx-auto w-[90%] max-w-[1200px] flex-1 px-[5%] py-8'}>
+        <main className={isFullPage ? 'flex-1' : 'mx-auto w-[90%] max-w-[1200px] flex-1 px-[5%] py-8'}>
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
@@ -47,11 +53,12 @@ function App() {
           </Routes>
         </main>
 
-        {!isComplaintRoute && (
+        {!isFullPage && !isAuthRoute && (
           <footer className="mt-auto p-8 text-center text-sm text-surface-500">
             <p>&copy; 2026 Smart City Service Complaint Portal. All rights reserved.</p>
           </footer>
         )}
+
       </div>
     </div>
   );

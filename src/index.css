@@ -1,4 +1,7 @@
 @import "tailwindcss";
+html {
+  scroll-behavior: smooth;
+}
 
 @theme {
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
