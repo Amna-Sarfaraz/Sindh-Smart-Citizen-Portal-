@@ -6,6 +6,7 @@ import Register from './pages/Register';
 import Property from './pages/Property';
 import Complaint from './pages/Complaint';
 import Dashboard from './pages/Dashboard';
+import ProfilePage from './pages/ProfilePage'; 
 
 function App() {
   const location = useLocation();
@@ -20,6 +21,7 @@ function App() {
           <li><Link to="/property">Properties</Link></li>
           <li><Link to="/complaint">Complaints</Link></li>
           <li><Link to="/dashboard">Dashboard</Link></li>
+          <li><Link to="/profile">Profile</Link></li> 
           <li><Link to="/login" className="btn-login">Login</Link></li>
           <li><Link to="/register" className="btn-register">Register</Link></li>
         </ul>
@@ -33,6 +35,7 @@ function App() {
           <Route path="/property" element={<Property />} />
           <Route path="/complaint" element={<Complaint />} />
           <Route path="/dashboard" element={<Dashboard />} />
+           <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </main>
 
