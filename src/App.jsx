@@ -3,7 +3,7 @@ import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Property from './pages/Property';
+import Property from './pages/Departments';
 import Complaint from './pages/Complaint';
 import Dashboard from './pages/Dashboard';
 import ProfilePage from './pages/ProfilePage';
@@ -25,7 +25,7 @@ function App() {
             </div>
             <ul className="flex list-none items-center gap-6 p-0 text-sm font-medium">
               <li><Link to="/" className={navLinkClass}>Home</Link></li>
-              <li><Link to="/property" className={navLinkClass}>Properties</Link></li>
+              <li><Link to="/Departments" className={navLinkClass}>Departments</Link></li>
               <li><Link to="/complaint" className={navLinkClass}>Complaints</Link></li>
               <li><Link to="/dashboard" className={navLinkClass}>Dashboard</Link></li>
               <li><Link to="/profile" className={navLinkClass}>Profile</Link></li>
@@ -40,7 +40,7 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/property" element={<Property />} />
+            <Route path="/Departments" element={<Property />} />
             <Route path="/complaint" element={<Complaint />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<ProfilePage />} />
