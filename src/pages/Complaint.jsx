@@ -2,6 +2,7 @@ import React from 'react';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import { SelectInput, TextArea, TextInput } from '../components/ui/FormField';
+import DashboardLayout from './DashboardLayout';
 
 const timeline = [
   { id: 1, label: 'Submitted', done: true },
@@ -26,25 +27,9 @@ const statusClassMap = {
 
 function Complaint() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-surface-100 via-surface-100 to-surface-200 font-[Segoe_UI,Tahoma,Geneva,Verdana,sans-serif] text-[#15213b]">
-      <header className="flex h-[58px] items-center gap-3.5 bg-gradient-to-r from-[#0e376f] to-[#1f4b85] px-4 text-white">
-        <div className="flex min-w-[260px] items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#9db8de] text-[0.66rem] font-bold">SSCP</div>
-          <div className="hidden text-[0.96rem] font-semibold sm:block">Sindh Smart Citizen Portal</div>
-        </div>
-        <div className="w-full max-w-[410px] flex-1">
-          <input
-            type="text"
-            defaultValue=""
-            placeholder="Search"
-            className="h-[34px] w-full rounded-[5px] border border-[#7f9ec9] bg-[#f5f7fb] px-2.5 text-sm text-slate-700 outline-none"
-          />
-        </div>
-        <div className="ml-auto rounded-2xl border border-white/30 bg-white/15 px-3 py-1 text-xs font-bold">ENG</div>
-      </header>
-
-      <div className="flex min-h-[calc(100vh-58px)]">
-        <section className="flex-1 px-3 py-4 sm:px-5 sm:pb-6">
+    <DashboardLayout>
+      <div className="min-h-full font-[Segoe_UI,Tahoma,Geneva,Verdana,sans-serif] text-[#15213b]">
+        <section className="px-3 py-4 sm:px-5 sm:pb-6">
           <h1 className="mb-3.5 mt-0.5 text-[1.8rem] font-semibold text-[#1e3354]">Complaints &amp; Issue Management</h1>
 
           <div className="grid items-start gap-3 lg:grid-cols-[1fr_260px]">
@@ -138,7 +123,7 @@ function Complaint() {
           </Card>
         </section>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
 
