@@ -40,24 +40,31 @@ function Register() {
 
     setSubmitting(true);
     try {
-      const res = await fetch('/api/users', {
+      const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fullName: form.fullName,
-          email: form.email,
-          passwordHash: form.password,
-          cnic: form.cnic,
-          phone: form.phone,
-          address: form.address,
-          role: 'Citizen',
-          userProfilePic: null,
+          Full_Name: form.fullName,
+          Email: form.email,
+          Password: form.password,
+          CNIC: form.cnic,
+          Phone: form.phone,
+          Address: form.address,
+          Role: 'User',
+          User_ProfilePic: null,
         }),
       });
 
-      const data = await res.json();
+      let data = null;
+      try {
+        data = await res.json();
+      } catch (parseError) {
+        data = null;
+      }
       if (!res.ok) {
-        throw new Error(data?.error || 'Registration failed');
+        const baseMessage = data?.message || `Registration failed (HTTP ${res.status})`;
+        const details = data?.details ? `: ${data.details}` : '';
+        throw new Error(`${baseMessage}${details}`);
       }
 
       setSuccess('Account created successfully.');

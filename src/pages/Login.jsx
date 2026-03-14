@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { mockData } from '../mockData';
+import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
 import Button from '../components/ui/Button';
 import AuthShell from '../components/ui/AuthShell';
@@ -7,18 +7,66 @@ import { FormField, TextInput } from '../components/ui/FormField';
 
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const navigate = useNavigate();
+
+  const onChange = (key) => (e) => {
+    setForm((prev) => ({ ...prev, [key]: e.target.value }));
+  };
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!form.email || !form.password) {
+      setError('Please enter email and password.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          Email: form.email,
+          Password: form.password,
+        }),
+      });
+      let data = null;
+      try {
+        data = await res.json();
+      } catch (parseError) {
+        data = null;
+      }
+      if (!res.ok) {
+        const baseMessage = data?.message || `Login failed (HTTP ${res.status})`;
+        const details = data?.details ? `: ${data.details}` : '';
+        throw new Error(`${baseMessage}${details}`);
+      }
+      setSuccess(`Welcome, ${data.full_name || 'user'}!`);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <AuthShell logo={logo} title="Sindh Smart Citizen Portal" subtitle="Login">
-      <form onSubmit={(e) => e.preventDefault()} className="mt-6">
-        <FormField label="CNIC Number" htmlFor="cnic">
+      <form onSubmit={onSubmit} className="mt-6">
+        <FormField label="Email Address" htmlFor="email">
           <TextInput
-            id="cnic"
-            type="text"
-            maxLength="15"
-            pattern="[0-9]{5}-[0-9]{7}-[0-9]{1}"
-            placeholder="XXXXX-XXXXXXX-X"
-            defaultValue={mockData.currentUser.cnic}
+            id="email"
+            type="email"
+            placeholder="e.g. janedoe@gmail.com"
+            value={form.email}
+            onChange={onChange('email')}
             required
           />
         </FormField>
@@ -29,6 +77,9 @@ function Login() {
               type={showPassword ? 'text' : 'password'}
               placeholder="********"
               className="pr-11"
+              value={form.password}
+              onChange={onChange('password')}
+              required
             />
             <button
               type="button"
@@ -52,8 +103,12 @@ function Login() {
             </button>
           </div>
         </FormField>
-        <Button type="submit" fullWidth size="lg">
-          Login
+
+        {error ? <div className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div> : null}
+        {success ? <div className="mb-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{success}</div> : null}
+
+        <Button type="submit" fullWidth size="lg" disabled={submitting}>
+          {submitting ? 'Logging in...' : 'Login'}
         </Button>
       </form>
       <p className="mt-4 text-white">
