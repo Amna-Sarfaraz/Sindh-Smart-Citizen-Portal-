@@ -37,17 +37,23 @@ function Login() {
           Password: form.password,
         }),
       });
+
       let data = null;
       try {
         data = await res.json();
       } catch (parseError) {
         data = null;
       }
+
       if (!res.ok) {
         const baseMessage = data?.message || `Login failed (HTTP ${res.status})`;
         const details = data?.details ? `: ${data.details}` : '';
         throw new Error(`${baseMessage}${details}`);
       }
+
+      // ✅ Save full user data to localStorage
+      localStorage.setItem('user', JSON.stringify(data));
+
       setSuccess(`Welcome, ${data.full_name || 'user'}!`);
       navigate('/dashboard');
     } catch (err) {
