@@ -1,3 +1,74 @@
+// import React from 'react';
+// import { Routes, Route, Link, useLocation } from 'react-router-dom';
+// import Landing from './pages/Landing';
+// import Login from './pages/Login';
+// import Register from './pages/Register';
+// import Property from './pages/Departments';
+// import Complaint from './pages/Complaint';
+// import Dashboard from './pages/Dashboard';
+// import ProfilePage from './pages/ProfilePage';
+
+// const navLinkClass = 'text-surface-500 transition-colors hover:text-brand-600';
+
+// function App() {
+//   const location = useLocation();
+//   const isComplaintRoute = location.pathname === '/complaint';
+//   const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
+//   const isLandingRoute = location.pathname === '/';
+//   const isProfileRoute = location.pathname === '/profile';
+//   const isDashboardRoute = location.pathname === '/dashboard';
+//   const isDepartmentsRoute = location.pathname === '/departments';
+
+//   const isFullPage = isLandingRoute || isDepartmentsRoute || isComplaintRoute || isProfileRoute || isDashboardRoute;
+
+//   return (
+//     <div className="min-h-screen bg-surface-50 text-surface-800">
+//       <div className="flex min-h-screen flex-col">
+
+//         {!isAuthRoute && !isFullPage && (
+//           <nav className="sticky top-0 z-50 flex items-center justify-between bg-white px-[5%] py-4 shadow-sm">
+//             <div className="text-lg font-bold text-surface-900">
+//               <Link to="/">SSCP</Link>
+//             </div>
+//             <ul className="flex list-none items-center gap-6 p-0 text-sm font-medium">
+//               <li><Link to="/" className={navLinkClass}>Home</Link></li>
+//               <li><Link to="/departments" className={navLinkClass}>Departments</Link></li>
+//               <li><Link to="/complaint" className={navLinkClass}>Complaints</Link></li>
+//               <li><Link to="/dashboard" className={navLinkClass}>Dashboard</Link></li>
+//               <li><Link to="/profile" className={navLinkClass}>Profile</Link></li>
+//               <li><Link to="/login" className={navLinkClass}>Login</Link></li>
+//               <li><Link to="/register" className={navLinkClass}>Register</Link></li>
+//             </ul>
+//           </nav>
+//         )}
+
+//         <main className={isFullPage ? 'flex-1' : 'mx-auto w-[90%] max-w-[1200px] flex-1 px-[5%] py-8'}>
+//           <Routes>
+//             <Route path="/" element={<Landing />} />
+//             <Route path="/login" element={<Login />} />
+//             <Route path="/register" element={<Register />} />
+//             <Route path="/departments" element={<Property />} />
+//             <Route path="/complaint" element={<Complaint />} />
+//             <Route path="/dashboard" element={<Dashboard />} />
+//             <Route path="/profile" element={<ProfilePage />} />
+//           </Routes>
+//         </main>
+
+//         {!isFullPage && !isAuthRoute && (
+//           <footer className="mt-auto p-8 text-center text-sm text-surface-500">
+//             <p>&copy; 2026 Smart City Service Complaint Portal. All rights reserved.</p>
+//           </footer>
+//         )}
+
+//       </div>
+//     </div>
+//   );
+// }
+
+// export default App;
+
+
+
 import React from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import Landing from './pages/Landing';
@@ -7,6 +78,11 @@ import Property from './pages/Departments';
 import Complaint from './pages/Complaint';
 import Dashboard from './pages/Dashboard';
 import ProfilePage from './pages/ProfilePage';
+import AdminRoute from './pages/admin/AdminRoute';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminComplaints from './pages/admin/AdminComplaints';
+import AdminOfficers from './pages/admin/AdminOfficers';
+import AdminDepartments from './pages/admin/AdminDepartments';
 
 const navLinkClass = 'text-surface-500 transition-colors hover:text-brand-600';
 
@@ -17,9 +93,10 @@ function App() {
   const isLandingRoute = location.pathname === '/';
   const isProfileRoute = location.pathname === '/profile';
   const isDashboardRoute = location.pathname === '/dashboard';
+  const isAdminRoute = location.pathname.startsWith('/admin');
   const isDepartmentsRoute = location.pathname === '/departments';
 
-  const isFullPage = isLandingRoute || isDepartmentsRoute || isComplaintRoute || isProfileRoute || isDashboardRoute;
+  const isFullPage = isLandingRoute || isDepartmentsRoute || isComplaintRoute || isProfileRoute || isDashboardRoute || isAdminRoute;
 
   return (
     <div className="min-h-screen bg-surface-50 text-surface-800">
@@ -51,6 +128,10 @@ function App() {
             <Route path="/complaint" element={<Complaint />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+            <Route path="/admin/complaints" element={<AdminRoute><AdminComplaints /></AdminRoute>} />
+            <Route path="/admin/officers" element={<AdminRoute><AdminOfficers /></AdminRoute>} />
+            <Route path="/admin/departments" element={<AdminRoute><AdminDepartments /></AdminRoute>} />
           </Routes>
         </main>
 
