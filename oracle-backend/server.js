@@ -233,3 +233,211 @@ app.get('/api/data', async (req, res) => {
 
 // ─── START ───────────────────────────────────────────────────────
 app.listen(5000, () => console.log('🚀 Server running on port 5000'));
+
+
+
+
+
+
+
+
+
+
+// ─── GET ALL DEPARTMENTS ──────────────────────────────────────────
+app.get('/api/departments', async (req, res) => {
+  try {
+    const result = await query(`SELECT DEPT_ID, DEPT_NAME FROM DEPARTMENTS ORDER BY DEPT_ID`);
+    res.json(result.rows || []);
+  } catch (err) {
+    console.error('Departments Error:', err.message);
+    res.status(500).json({ message: 'Could not fetch departments.' });
+  }
+});
+
+
+// ─── GET OFFICERS (optionally filter by dept) ─────────────────────
+app.get('/api/officers', async (req, res) => {
+  const deptId = req.query.dept_id;
+  try {
+    const sql = deptId
+      ? `SELECT OFFICER_ID, OFFICER_NAME FROM OFFICERS WHERE DEPT_ID = :dept_id ORDER BY OFFICER_ID`
+      : `SELECT OFFICER_ID, OFFICER_NAME FROM OFFICERS ORDER BY OFFICER_ID`;
+    const binds = deptId ? { dept_id: Number(deptId) } : {};
+    const result = await query(sql, binds);
+    res.json(result.rows || []);
+  } catch (err) {
+    console.error('Officers Error:', err.message);
+    res.status(500).json({ message: 'Could not fetch officers.' });
+  }
+});
+
+
+// ─── SUBMIT COMPLAINT ─────────────────────────────────────────────
+app.post('/api/complaints', async (req, res) => {
+  const { user_id, dept_id, title, description } = req.body || {};
+
+  if (!user_id || !dept_id || !title)
+    return res.status(400).json({ message: 'user_id, dept_id and title are required.' });
+
+  try {
+    const result = await query(
+      `INSERT INTO COMPLAINTS (USER_ID, DEPT_ID, TITLE, DESCRIPTION, STATUS, DATE_FILED)
+       VALUES (:user_id, :dept_id, :title, :description, 'Pending', SYSDATE)
+       RETURNING COMPLAINT_ID INTO :id`,
+      {
+        user_id:     Number(user_id),
+        dept_id:     Number(dept_id),
+        title:       title.substring(0, 200),
+        description: description
+          ? { val: description, type: oracledb.CLOB }
+          : null,
+        id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
+      },
+      { autoCommit: true }
+    );
+    res.status(201).json({
+      complaint_id: result.outBinds.id?.[0],
+      message: 'Complaint submitted successfully.',
+    });
+  } catch (err) {
+    console.error('Submit Complaint Error:', err.message);
+    res.status(500).json({ message: 'Could not submit complaint.', details: err.message });
+  }
+});
+
+
+// ─── GET COMPLAINTS FOR A USER ────────────────────────────────────
+app.get('/api/complaints/user/:user_id', async (req, res) => {
+  const userId = Number(req.params.user_id);
+  if (!userId) return res.status(400).json({ message: 'Invalid user ID.' });
+
+  try {
+    const result = await query(
+      `SELECT
+         C.COMPLAINT_ID,
+         TO_CHAR(C.COMPLAINT_ID, 'FM00000') AS DISPLAY_ID,
+         D.DEPT_NAME        AS DEPARTMENT,
+         TO_CHAR(C.DATE_FILED, 'DD-Mon-YYYY') AS DATE_FILED,
+         C.STATUS,
+         NVL(O.OFFICER_NAME, 'Not Assigned') AS OFFICER,
+         C.TITLE
+       FROM COMPLAINTS C
+       JOIN DEPARTMENTS D  ON C.DEPT_ID    = D.DEPT_ID
+       LEFT JOIN OFFICERS O ON C.OFFICER_ID = O.OFFICER_ID
+       WHERE C.USER_ID = :user_id
+       ORDER BY C.DATE_FILED DESC`,
+      { user_id: userId }
+    );
+    res.json(result.rows || []);
+  } catch (err) {
+    console.error('Get Complaints Error:', err.message);
+    res.status(500).json({ message: 'Could not fetch complaints.' });
+  }
+});
+
+
+// ─── GET SINGLE COMPLAINT (for View Details) ──────────────────────
+app.get('/api/complaints/:id', async (req, res) => {
+  const complaintId = Number(req.params.id);
+  if (!complaintId) return res.status(400).json({ message: 'Invalid complaint ID.' });
+
+  try {
+    const result = await query(
+      `SELECT
+         C.COMPLAINT_ID,
+         C.TITLE,
+         C.STATUS,
+         D.DEPT_NAME                           AS DEPARTMENT,
+         NVL(O.OFFICER_NAME, 'Not Assigned')   AS OFFICER,
+         TO_CHAR(C.DATE_FILED,    'DD-Mon-YYYY') AS DATE_FILED,
+         TO_CHAR(C.DATE_RESOLVED, 'DD-Mon-YYYY') AS DATE_RESOLVED,
+         C.DESCRIPTION
+       FROM COMPLAINTS C
+       JOIN DEPARTMENTS D  ON C.DEPT_ID    = D.DEPT_ID
+       LEFT JOIN OFFICERS O ON C.OFFICER_ID = O.OFFICER_ID
+       WHERE C.COMPLAINT_ID = :complaint_id`,
+      { complaint_id: complaintId }
+    );
+
+    if (!result.rows.length)
+      return res.status(404).json({ message: 'Complaint not found.' });
+
+    const row = result.rows[0];
+
+    // CLOB → string for description
+    let description = '';
+    if (row.DESCRIPTION) {
+      description = typeof row.DESCRIPTION === 'string'
+        ? row.DESCRIPTION
+        : (await row.DESCRIPTION.getData?.() || '');
+    }
+
+    res.json({ ...row, DESCRIPTION: description });
+  } catch (err) {
+    console.error('Get Complaint Error:', err.message);
+    res.status(500).json({ message: 'Could not fetch complaint.' });
+  }
+});
+
+
+// ─── UPLOAD DOCUMENT TO COMPLAINT ────────────────────────────────
+app.post('/api/complaints/:id/documents', async (req, res) => {
+  const complaintId = Number(req.params.id);
+  const { file_name, file_data } = req.body || {};
+
+  if (!complaintId || !file_data)
+    return res.status(400).json({ message: 'complaint_id and file_data required.' });
+
+  try {
+    await query(
+      `INSERT INTO COMPLAINT_DOCUMENTS (COMPLAINT_ID, FILE_NAME, FILE_DATA)
+       VALUES (:complaint_id, :file_name, :file_data)`,
+      {
+        complaint_id: complaintId,
+        file_name:    file_name || 'document',
+        file_data:    { val: file_data, type: oracledb.CLOB },
+      },
+      { autoCommit: true }
+    );
+    res.status(201).json({ message: 'Document uploaded.' });
+  } catch (err) {
+    console.error('Upload Doc Error:', err.message);
+    res.status(500).json({ message: 'Could not upload document.', details: err.message });
+  }
+});
+
+
+// ─── ADMIN: UPDATE COMPLAINT STATUS / ASSIGN OFFICER ─────────────
+app.put('/api/complaints/:id', async (req, res) => {
+  const complaintId = Number(req.params.id);
+  const { status, officer_id } = req.body || {};
+
+  if (!complaintId) return res.status(400).json({ message: 'Invalid complaint ID.' });
+
+  try {
+    await query(
+      `UPDATE COMPLAINTS SET
+         STATUS      = NVL(:status, STATUS),
+         OFFICER_ID  = NVL(:officer_id, OFFICER_ID),
+         DATE_RESOLVED = CASE WHEN :status2 = 'Resolved' THEN SYSDATE ELSE DATE_RESOLVED END
+       WHERE COMPLAINT_ID = :complaint_id`,
+      {
+        status:       status      || null,
+        officer_id:   officer_id  ? Number(officer_id) : null,
+        status2:      status      || null,
+        complaint_id: complaintId,
+      },
+      { autoCommit: true }
+    );
+    res.json({ message: 'Complaint updated.' });
+  } catch (err) {
+    console.error('Update Complaint Error:', err.message);
+    res.status(500).json({ message: 'Could not update complaint.', details: err.message });
+  }
+});
+
+
+
+
+
+
