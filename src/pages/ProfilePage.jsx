@@ -10,6 +10,11 @@ export default function Profile() {
   const [message, setMessage] = useState('');
   const [logs, setLogs]       = useState([]);
   const [avatar, setAvatar]   = useState(user.profilepic || null);
+  const [complaintStats, setComplaintStats] = useState({
+    filed: 0,
+    resolved: 0,
+    active: 0,
+  });
 
   const [form, setForm] = useState({
     name:     user.full_name   || '',
@@ -38,6 +43,27 @@ export default function Profile() {
           status:   l.STATUS     || '—',
           green:    l.STATUS === 'Success',
         })));
+      })
+      .catch(() => {});
+  }, []);
+
+  // Load complaint stats
+  useEffect(() => {
+    if (!user.user_id) return;
+    fetch(`/api/dashboard/${user.user_id}`)
+      .then(r => r.json())
+      .then(data => {
+        const stats = data?.stats || {};
+        const total = Number(stats.total || 0);
+        const resolved = Number(stats.resolved || 0);
+        const pending = Number(stats.pending || 0);
+        const inProgress = Number(stats.inProgress || 0);
+
+        setComplaintStats({
+          filed: total,
+          resolved,
+          active: pending + inProgress,
+        });
       })
       .catch(() => {});
   }, []);
@@ -209,9 +235,9 @@ export default function Profile() {
                 <h3 className="text-xl font-semibold text-[#1b3a57] border-b pb-2 mb-4">Complaint Stats</h3>
                 <div className="grid grid-cols-3 gap-4 text-center">
                   {[
-                    { label: 'Filed',    count: 47, color: 'text-[#1b3a57]'  },
-                    { label: 'Resolved', count: 24, color: 'text-green-600'  },
-                    { label: 'Active',   count: 15, color: 'text-orange-500' },
+                    { label: 'Filed',    count: complaintStats.filed, color: 'text-[#1b3a57]'  },
+                    { label: 'Resolved', count: complaintStats.resolved, color: 'text-green-600'  },
+                    { label: 'Active',   count: complaintStats.active, color: 'text-orange-500' },
                   ].map(s => (
                     <div key={s.label} className="bg-[#f6f5f1] rounded-xl p-4">
                       <p className={`text-2xl font-bold ${s.color}`}>{s.count}</p>

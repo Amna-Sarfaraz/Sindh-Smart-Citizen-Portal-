@@ -440,4 +440,56 @@ app.put('/api/complaints/:id', async (req, res) => {
 
 
 
+// ─── DASHBOARD DATA FOR A USER ────────────────────────────────────
+app.get('/api/dashboard/:user_id', async (req, res) => {
+  const userId = Number(req.params.user_id);
+  if (!userId) return res.status(400).json({ message: 'Invalid user ID.' });
 
+  try {
+    const statsResult = await query(
+      `SELECT
+         COUNT(*) AS TOTAL_COMPLAINTS,
+         SUM(CASE WHEN STATUS = 'Pending' THEN 1 ELSE 0 END) AS PENDING_COMPLAINTS,
+         SUM(CASE WHEN STATUS = 'In Progress' THEN 1 ELSE 0 END) AS IN_PROGRESS_COMPLAINTS,
+         SUM(CASE WHEN STATUS = 'Resolved' THEN 1 ELSE 0 END) AS RESOLVED_COMPLAINTS
+       FROM COMPLAINTS
+       WHERE USER_ID = :user_id`,
+      { user_id: userId }
+    );
+
+    const recentResult = await query(
+      `SELECT
+         C.COMPLAINT_ID,
+         C.TITLE,
+         D.DEPT_NAME AS DEPARTMENT,
+         C.STATUS,
+         TO_CHAR(C.DATE_FILED, 'DD-Mon-YYYY') AS DATE_FILED
+       FROM COMPLAINTS C
+       JOIN DEPARTMENTS D ON C.DEPT_ID = D.DEPT_ID
+       WHERE C.USER_ID = :user_id
+       ORDER BY C.DATE_FILED DESC
+       FETCH FIRST 5 ROWS ONLY`,
+      { user_id: userId }
+    );
+
+    const statsRow = statsResult.rows?.[0] || {};
+    res.json({
+      stats: {
+        total: Number(statsRow.TOTAL_COMPLAINTS || 0),
+        pending: Number(statsRow.PENDING_COMPLAINTS || 0),
+        inProgress: Number(statsRow.IN_PROGRESS_COMPLAINTS || 0),
+        resolved: Number(statsRow.RESOLVED_COMPLAINTS || 0),
+      },
+      recentComplaints: (recentResult.rows || []).map((row) => ({
+        id: row.COMPLAINT_ID,
+        title: row.TITLE || '',
+        dept: row.DEPARTMENT || '',
+        status: row.STATUS || 'Pending',
+        date: row.DATE_FILED || '',
+      })),
+    });
+  } catch (err) {
+    console.error('Dashboard Error:', err.message);
+    res.status(500).json({ message: 'Could not fetch dashboard data.', details: err.message });
+  }
+});
