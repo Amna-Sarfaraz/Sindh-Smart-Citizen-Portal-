@@ -12,6 +12,11 @@ const NAV_LINKS = [
 
 export default function Landing() {
   const navigate = useNavigate();
+
+  function goToLogin(role) {
+    navigate(`/login?role=${role}`);
+  }
+
   return (
     <>
       <style>{`
@@ -74,8 +79,15 @@ export default function Landing() {
             style={{ color: "white", border: "1px solid rgba(255,255,255,0.3)" }}
             onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
             onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-            onClick={() => navigate('/login')}>
-            Login
+            onClick={() => goToLogin('citizen')}>
+            Citizen Login
+            </button>
+            <button className="px-5 py-2 text-base font-semibold rounded-lg transition-all"
+            style={{ color: "#dbeafe", border: "1px solid rgba(147,197,253,0.55)", background: "rgba(147,197,253,0.12)" }}
+            onMouseEnter={e => e.currentTarget.style.background = "rgba(147,197,253,0.2)"}
+            onMouseLeave={e => e.currentTarget.style.background = "rgba(147,197,253,0.12)"}
+            onClick={() => goToLogin('admin')}>
+            Admin Login
             </button>
             <button className="px-6 py-2.5 text-base rounded-xl font-semibold transition-all"
             style={{ background: "white", color: "#2E4A6F" }}
@@ -101,16 +113,16 @@ export default function Landing() {
 
         {/* ── HERO ── */}
         
-          <section id="home" className="pb-8 px-4 relative"
+          <section id="home" className="relative px-4 pb-16"
   style={{
     backgroundImage: `url(${heroBg})`,
     backgroundSize: "cover",
     backgroundPosition: "center center",
     backgroundRepeat: "no-repeat",
-    paddingTop: "35px", 
+    paddingTop: "112px",
   }}>
           <div className="absolute inset-0" style={{ background: "rgba(46,74,111,0.75)" }} />
-          <div className="relative max-w-2xl mx-auto text-center py-13">
+          <div className="relative mx-auto max-w-4xl text-center pt-10 pb-8">
 
             <div className="fade-up delay-1 badge mb-8"
               style={{ background: "rgba(255,255,255,0.15)", color: "white", border: "1px solid rgba(255,255,255,0.3)" }}>
@@ -129,16 +141,33 @@ export default function Landing() {
               Hold authorities accountable — all from one platform.
             </p>
 
-            <div className="fade-up delay-4">
-              <button className="px-8 py-4 rounded-2xl font-bold text-lg shadow-xl mb-10 transition-all"
-                style={{ background: "white", color: "#2E4A6F" }}
+            <div className="fade-up delay-4 mb-10">
+              <div className="mb-5 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                <button className="px-8 py-4 rounded-2xl font-bold text-lg shadow-xl transition-all"
+                  style={{ background: "white", color: "#2E4A6F" }}
+                  onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
+                  onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
+                  onClick={() => goToLogin('citizen')}>
+                  Citizen Login
+                </button>
+                <button className="px-8 py-4 rounded-2xl font-bold text-lg shadow-xl transition-all"
+                  style={{ background: "#dbeafe", color: "#17365d" }}
+                  onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
+                  onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
+                  onClick={() => goToLogin('admin')}>
+                  Admin Login
+                </button>
+              </div>
+              <button className="px-8 py-3 rounded-2xl font-bold text-base shadow-xl transition-all"
+                style={{ background: "rgba(255,255,255,0.14)", color: "white", border: "1px solid rgba(255,255,255,0.3)" }}
                 onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
-                onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>
+                onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
+                onClick={() => navigate('/complaint')}>
                 Submit a Complaint →
               </button>
             </div>
 
-            <div className="fade-up delay-5 grid grid-cols-3 gap-5 max-w-lg mx-auto">
+            <div className="fade-up delay-5 mx-auto mt-8 grid max-w-4xl grid-cols-1 gap-5 sm:grid-cols-3">
               {[
                 { icon: "✅", label: "Easy Filing",   desc: "Simple guided form" },
                 { icon: "📍", label: "Live Tracking", desc: "Real-time updates" },

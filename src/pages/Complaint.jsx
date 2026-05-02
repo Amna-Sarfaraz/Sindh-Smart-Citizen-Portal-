@@ -6,6 +6,11 @@ import DashboardLayout from './DashboardLayout';
 
 const API = 'http://localhost:5000/api';
 
+function getAuthHeaders(extra = {}) {
+  const token = localStorage.getItem('token');
+  return token ? { Authorization: `Bearer ${token}`, ...extra } : { ...extra };
+}
+
 const statusClassMap = {
   Pending:       'bg-amber-400',
   'In Progress': 'bg-brand-500',
@@ -35,7 +40,9 @@ function DetailModal({ complaintId, onClose }) {
   useEffect(() => {
     if (!complaintId) return;
     setLoading(true);
-    fetch(`${API}/complaints/${complaintId}`)
+    fetch(`${API}/complaints/${complaintId}`, {
+      headers: getAuthHeaders(),
+    })
       .then(r => r.json())
       .then(data => { setDetail(data); setLoading(false); })
       .catch(() => { setError('Failed to load details.'); setLoading(false); });
@@ -180,7 +187,9 @@ function Complaint() {
 
   const fetchComplaints = () => {
     if (!userId) return;
-    fetch(`${API}/complaints/user/${userId}`)
+    fetch(`${API}/complaints/user/${userId}`, {
+      headers: getAuthHeaders(),
+    })
       .then(r => r.json())
       .then(data => {
         setComplaints(data);
@@ -206,7 +215,7 @@ function Complaint() {
     try {
       const res  = await fetch(`${API}/complaints`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ user_id: userId, dept_id: deptId, title, description }),
       });
       const data = await res.json();
@@ -215,7 +224,7 @@ function Complaint() {
       if (fileData) {
         await fetch(`${API}/complaints/${data.complaint_id}/documents`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ file_name: fileData.name, file_data: fileData.base64 }),
         });
       }

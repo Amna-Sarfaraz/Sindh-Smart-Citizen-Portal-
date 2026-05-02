@@ -98,6 +98,23 @@ function adminRequired(req, res, next) {
   next();
 }
 
+function canAccessUser(req, targetUserId) {
+  const authUserId = Number(req.authUser?.user_id || 0);
+  const requestedUserId = Number(targetUserId || 0);
+  if (!authUserId || !requestedUserId) return false;
+  return req.authUser?.role === 'admin' || authUserId === requestedUserId;
+}
+
+async function getComplaintOwner(complaintId) {
+  const result = await query(
+    `SELECT COMPLAINT_ID, USER_ID
+     FROM COMPLAINTS
+     WHERE COMPLAINT_ID = :complaint_id`,
+    { complaint_id: Number(complaintId) }
+  );
+  return result.rows?.[0] || null;
+}
+
 // ─── REGISTER ────────────────────────────────────────────────────
 app.post('/api/register', async (req, res) => {
   const { Full_Name, Email, Password, CNIC, Phone, Address } = req.body || {};
@@ -219,14 +236,15 @@ app.get('/api/auth/me', authRequired, async (req, res) => {
 });
 
 // ─── UPDATE PROFILE ──────────────────────────────────────────────
-app.put('/api/users/:id', async (req, res) => {
+app.put('/api/users/:id', authRequired, async (req, res) => {
   const userId = Number(req.params.id);
   if (!userId) return res.status(400).json({ message: 'Invalid user ID.' });
+  if (!canAccessUser(req, userId)) return res.status(403).json({ message: 'Forbidden.' });
 
   const { full_name, phone, address, cnic, father_name, district, dob, profilepic } = req.body || {};
 
   try {
-    await query(
+    const result = await query(
       `UPDATE USERS SET
          FULL_NAME       = :full_name,
          PHONE           = :phone,
@@ -250,6 +268,9 @@ app.put('/api/users/:id', async (req, res) => {
       },
       { autoCommit: true }
     );
+    if (!result.rowsAffected) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
     res.json({ message: 'Profile updated successfully.' });
   } catch (err) {
     console.error('Update Error:', err.message);
@@ -258,9 +279,10 @@ app.put('/api/users/:id', async (req, res) => {
 });
 
 // ─── GET LOGIN LOGS ──────────────────────────────────────────────
-app.get('/api/users/:id/logs', async (req, res) => {
+app.get('/api/users/:id/logs', authRequired, async (req, res) => {
   const userId = Number(req.params.id);
   if (!userId) return res.status(400).json({ message: 'Invalid user ID.' });
+  if (!canAccessUser(req, userId)) return res.status(403).json({ message: 'Forbidden.' });
 
   try {
     const result = await query(
@@ -280,7 +302,7 @@ app.get('/api/users/:id/logs', async (req, res) => {
 });
 
 // ─── GET ALL USERS ───────────────────────────────────────────────
-app.get('/api/users', async (req, res) => {
+app.get('/api/users', authRequired, adminRequired, async (req, res) => {
   try {
     const result = await query(
       `SELECT USER_ID, FULL_NAME, EMAIL, CNIC, PHONE, ADDRESS,
@@ -296,7 +318,7 @@ app.get('/api/users', async (req, res) => {
 });
 
 // ─── GET DATA (admin) ─────────────────────────────────────────────
-app.get('/api/data', async (req, res) => {
+app.get('/api/data', authRequired, adminRequired, async (req, res) => {
   try {
     const result = await query(
       `SELECT USER_ID, FULL_NAME, EMAIL, CNIC, PHONE, ADDRESS,
@@ -353,11 +375,14 @@ app.get('/api/officers', async (req, res) => {
 
 
 // ─── SUBMIT COMPLAINT ─────────────────────────────────────────────
-app.post('/api/complaints', async (req, res) => {
+app.post('/api/complaints', authRequired, async (req, res) => {
   const { user_id, dept_id, title, description } = req.body || {};
 
   if (!user_id || !dept_id || !title)
     return res.status(400).json({ message: 'user_id, dept_id and title are required.' });
+  if (Number(user_id) !== Number(req.authUser.user_id) && req.authUser?.role !== 'admin') {
+    return res.status(403).json({ message: 'Forbidden.' });
+  }
 
   try {
     const result = await query(
@@ -387,9 +412,10 @@ app.post('/api/complaints', async (req, res) => {
 
 
 // ─── GET COMPLAINTS FOR A USER ────────────────────────────────────
-app.get('/api/complaints/user/:user_id', async (req, res) => {
+app.get('/api/complaints/user/:user_id', authRequired, async (req, res) => {
   const userId = Number(req.params.user_id);
   if (!userId) return res.status(400).json({ message: 'Invalid user ID.' });
+  if (!canAccessUser(req, userId)) return res.status(403).json({ message: 'Forbidden.' });
 
   try {
     const result = await query(
@@ -417,9 +443,10 @@ app.get('/api/complaints/user/:user_id', async (req, res) => {
 
 
 // ─── DASHBOARD DATA FOR A USER ────────────────────────────────────
-app.get('/api/dashboard/:user_id', async (req, res) => {
+app.get('/api/dashboard/:user_id', authRequired, async (req, res) => {
   const userId = Number(req.params.user_id);
   if (!userId) return res.status(400).json({ message: 'Invalid user ID.' });
+  if (!canAccessUser(req, userId)) return res.status(403).json({ message: 'Forbidden.' });
 
   try {
     const statsResult = await query(
@@ -472,11 +499,15 @@ app.get('/api/dashboard/:user_id', async (req, res) => {
 
 
 // ─── GET SINGLE COMPLAINT (for View Details) ──────────────────────
-app.get('/api/complaints/:id', async (req, res) => {
+app.get('/api/complaints/:id', authRequired, async (req, res) => {
   const complaintId = Number(req.params.id);
   if (!complaintId) return res.status(400).json({ message: 'Invalid complaint ID.' });
 
   try {
+    const complaint = await getComplaintOwner(complaintId);
+    if (!complaint) return res.status(404).json({ message: 'Complaint not found.' });
+    if (!canAccessUser(req, complaint.USER_ID)) return res.status(403).json({ message: 'Forbidden.' });
+
     const result = await query(
       `SELECT
          C.COMPLAINT_ID,
@@ -516,7 +547,7 @@ app.get('/api/complaints/:id', async (req, res) => {
 
 
 // ─── UPLOAD DOCUMENT TO COMPLAINT ────────────────────────────────
-app.post('/api/complaints/:id/documents', async (req, res) => {
+app.post('/api/complaints/:id/documents', authRequired, async (req, res) => {
   const complaintId = Number(req.params.id);
   const { file_name, file_data } = req.body || {};
 
@@ -524,6 +555,10 @@ app.post('/api/complaints/:id/documents', async (req, res) => {
     return res.status(400).json({ message: 'complaint_id and file_data required.' });
 
   try {
+    const complaint = await getComplaintOwner(complaintId);
+    if (!complaint) return res.status(404).json({ message: 'Complaint not found.' });
+    if (!canAccessUser(req, complaint.USER_ID)) return res.status(403).json({ message: 'Forbidden.' });
+
     await query(
       `INSERT INTO COMPLAINT_DOCUMENTS (COMPLAINT_ID, FILE_NAME, FILE_DATA)
        VALUES (:complaint_id, :file_name, :file_data)`,
@@ -543,14 +578,14 @@ app.post('/api/complaints/:id/documents', async (req, res) => {
 
 
 // ─── ADMIN: UPDATE COMPLAINT STATUS / ASSIGN OFFICER ─────────────
-app.put('/api/complaints/:id', async (req, res) => {
+app.put('/api/complaints/:id', authRequired, adminRequired, async (req, res) => {
   const complaintId = Number(req.params.id);
   const { status, officer_id } = req.body || {};
 
   if (!complaintId) return res.status(400).json({ message: 'Invalid complaint ID.' });
 
   try {
-    await query(
+    const result = await query(
       `UPDATE COMPLAINTS SET
          STATUS      = NVL(:status, STATUS),
          OFFICER_ID  = NVL(:officer_id, OFFICER_ID),
@@ -564,6 +599,9 @@ app.put('/api/complaints/:id', async (req, res) => {
       },
       { autoCommit: true }
     );
+    if (!result.rowsAffected) {
+      return res.status(404).json({ message: 'Complaint not found.' });
+    }
     res.json({ message: 'Complaint updated.' });
   } catch (err) {
     console.error('Update Complaint Error:', err.message);
@@ -793,7 +831,7 @@ app.put('/api/admin/complaints/:id', authRequired, adminRequired, async (req, re
     }
 
     try {
-      await query(
+      const updateResult = await query(
         `UPDATE COMPLAINTS SET
            STATUS = :status,
            OFFICER_ID = :officer_id,
@@ -809,9 +847,12 @@ app.put('/api/admin/complaints/:id', authRequired, adminRequired, async (req, re
         },
         { autoCommit: true }
       );
+      if (!updateResult.rowsAffected) {
+        return res.status(404).json({ message: 'Complaint not found.' });
+      }
     } catch (err) {
       if (err.errorNum === 904) {
-        await query(
+        const fallbackResult = await query(
           `UPDATE COMPLAINTS SET
              STATUS = :status,
              OFFICER_ID = :officer_id,
@@ -825,6 +866,9 @@ app.put('/api/admin/complaints/:id', authRequired, adminRequired, async (req, re
           },
           { autoCommit: true }
         );
+        if (!fallbackResult.rowsAffected) {
+          return res.status(404).json({ message: 'Complaint not found.' });
+        }
       } else if (err.errorNum === 2290) {
         return res.status(400).json({
           message: 'Status is blocked by current DB constraint. Run schema migration for new status flow.',
@@ -941,7 +985,7 @@ app.put('/api/admin/officers/:id', authRequired, adminRequired, async (req, res)
   const { officer_name, dept_id } = req.body || {};
   if (!officerId) return res.status(400).json({ message: 'Invalid officer ID.' });
   try {
-    await query(
+    const result = await query(
       `UPDATE OFFICERS SET
          OFFICER_NAME = NVL(:officer_name, OFFICER_NAME),
          DEPT_ID = NVL(:dept_id, DEPT_ID)
@@ -953,6 +997,9 @@ app.put('/api/admin/officers/:id', authRequired, adminRequired, async (req, res)
       },
       { autoCommit: true }
     );
+    if (!result.rowsAffected) {
+      return res.status(404).json({ message: 'Officer not found.' });
+    }
     res.json({ message: 'Officer updated.' });
   } catch (err) {
     console.error('Update Officer Error:', err.message);
@@ -993,22 +1040,21 @@ app.put('/api/admin/departments/:id', authRequired, adminRequired, async (req, r
   const { dept_name } = req.body || {};
   if (!deptId || !dept_name) return res.status(400).json({ message: 'dept_id and dept_name required.' });
   try {
-    await query(
+    const result = await query(
       `UPDATE DEPARTMENTS
        SET DEPT_NAME = :dept_name
        WHERE DEPT_ID = :dept_id`,
       { dept_name: String(dept_name).trim(), dept_id: deptId },
       { autoCommit: true }
     );
+    if (!result.rowsAffected) {
+      return res.status(404).json({ message: 'Department not found.' });
+    }
     res.json({ message: 'Department updated.' });
   } catch (err) {
     console.error('Update Department Error:', err.message);
     res.status(500).json({ message: 'Could not update department.', details: err.message });
   }
 });
-
-
-
-
 
 

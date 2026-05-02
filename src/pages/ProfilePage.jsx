@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
-import DashboardLayout from "../Pages/DashboardLayout";
+import DashboardLayout from "./DashboardLayout";
 import bgImg from "../assets/bg.png";
+
+function getAuthHeaders(extra = {}) {
+  const token = localStorage.getItem('token');
+  return token ? { Authorization: `Bearer ${token}`, ...extra } : { ...extra };
+}
 
 export default function Profile() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -32,7 +37,9 @@ export default function Profile() {
   // Load login logs
   useEffect(() => {
     if (!user.user_id) return;
-    fetch(`/api/users/${user.user_id}/logs`)
+    fetch(`/api/users/${user.user_id}/logs`, {
+      headers: getAuthHeaders(),
+    })
       .then(r => r.json())
       .then(data => {
         if (!Array.isArray(data)) return;
@@ -50,7 +57,9 @@ export default function Profile() {
   // Load complaint stats
   useEffect(() => {
     if (!user.user_id) return;
-    fetch(`/api/dashboard/${user.user_id}`)
+    fetch(`/api/dashboard/${user.user_id}`, {
+      headers: getAuthHeaders(),
+    })
       .then(r => r.json())
       .then(data => {
         const stats = data?.stats || {};
@@ -77,7 +86,7 @@ export default function Profile() {
     try {
       const res = await fetch(`/api/users/${u.user_id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           full_name:   form.name,
           father_name: form.father,

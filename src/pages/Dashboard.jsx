@@ -1,12 +1,17 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import DashboardLayout from "../pages/DashboardLayout";
+import DashboardLayout from "./DashboardLayout";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell
 } from "recharts";
 
 const API = "/api";
+
+function getAuthHeaders() {
+  const token = localStorage.getItem('token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 const ANNOUNCEMENTS = [
   { icon: "📢", text: "Water Supply Maintenance on 12th May. Expect disruptions." },
@@ -54,7 +59,9 @@ export default function Dashboard() {
     if (!userId) return;
 
     let mounted = true;
-    fetch(`${API}/dashboard/${userId}`)
+    fetch(`${API}/dashboard/${userId}`, {
+      headers: getAuthHeaders(),
+    })
       .then(async (res) => {
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {

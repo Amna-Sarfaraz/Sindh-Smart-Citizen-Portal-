@@ -132,7 +132,7 @@
 
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from '../assets/logo.png';
 import Button from '../components/ui/Button';
 import AuthShell from '../components/ui/AuthShell';
@@ -145,6 +145,9 @@ function Login() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const role = String(searchParams.get('role') || 'citizen').toLowerCase();
+  const isAdminLogin = role === 'admin';
 
   const onChange = (key) => (e) => {
     setForm((prev) => ({ ...prev, [key]: e.target.value }));
@@ -201,7 +204,14 @@ function Login() {
   };
 
   return (
-    <AuthShell logo={logo} title="Sindh Smart Citizen Portal" subtitle="Login">
+    <AuthShell
+      logo={logo}
+      title="Sindh Smart Citizen Portal"
+      subtitle={isAdminLogin ? 'Admin Login' : 'Citizen Login'}
+    >
+      <div className="mt-4 rounded-md border border-white/25 bg-white/10 px-3 py-2 text-sm text-white/90">
+        {isAdminLogin ? 'Use an account with admin role to access the admin dashboard.' : 'Use your citizen account to file and track complaints.'}
+      </div>
       <form onSubmit={onSubmit} className="mt-6">
         <FormField label="Email Address" htmlFor="email">
           <TextInput
@@ -257,6 +267,13 @@ function Login() {
       <p className="mt-4 text-white">
         Don&apos;t have an account?{' '}
         <a href="/register" className="text-brand-200 underline">Register here</a>
+      </p>
+      <p className="mt-3 text-white">
+        {isAdminLogin ? (
+          <a href="/login?role=citizen" className="text-brand-200 underline">Switch to citizen login</a>
+        ) : (
+          <a href="/login?role=admin" className="text-brand-200 underline">Switch to admin login</a>
+        )}
       </p>
       <p className="mt-3 text-white">
         <a href="/" className="text-brand-200 underline">Go back to home</a>

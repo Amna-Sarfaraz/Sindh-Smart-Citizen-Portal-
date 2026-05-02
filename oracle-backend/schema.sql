@@ -101,8 +101,8 @@ COMMIT;
 INSERT INTO users (full_name, email, password, role)
 VALUES (
   'System Admin',
-  'admin@portal.com',
-  '$2a$10$NuFaT9MOQ7QYjn3TpOTi9etNAwytUO/rbWoMDQD.sgq3pVOCPjj1G',
+  'superadmin@example.com',
+  '$2a$10$NSG4GC5A.NC7vJgJi9VRMOSjyy.0yUPjzFFq8cIM1XJ9Yc5dYiPna',
   'admin'
 );
 
